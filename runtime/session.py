@@ -2,9 +2,9 @@
 # Fecha: 2026-06-29
 # Utilidad: sesion operativa de SkillOAF Studio.
 # API/Funcion asociada: StudioSession.start / StudioSession.run_workflow.
-# Descripcion: encapsula Kernel, TaskQueue, Dispatcher y Scheduler para ejecutar workflows.
+# Descripcion: encapsula Kernel, TaskQueue, Dispatcher y Scheduler para ejecutar workflows, vinculando servicios permanentes.
 # Uso: session = StudioSession('.'); session.start(); session.run_default_workflow()
-# Resultado esperado: kernel iniciado y agentes ejecutados segun workflow.
+# Resultado esperado: kernel iniciado, servicios vinculados y agentes ejecutados segun workflow.
 # Conexion API: no conecta a APIs externas.
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ class StudioSession:
 
     def start(self) -> None:
         self.kernel.boot()
+        self.kernel.bind_session(self)
         self.kernel.events.publish("studio_session_started", {"project_root": str(self.project_root)})
 
     def run_workflow(self, workflow: Workflow) -> List[AgentResult]:
