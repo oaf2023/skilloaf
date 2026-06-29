@@ -2,9 +2,9 @@
 # Fecha: 2026-06-29
 # Utilidad: nucleo principal de SkillOAF Studio.
 # API/Funcion asociada: Kernel.boot / Kernel.register_default_agents / Kernel.status.
-# Descripcion: coordina EventBus, MemoryBus, AgentBus, ArtifactEngine, configuracion, logs y metricas.
+# Descripcion: coordina buses, memoria, agentes, artefactos, configuracion, logs, metricas, proyecto, estados y catalogos.
 # Uso: kernel = Kernel('.'); kernel.boot(); print(kernel.status())
-# Resultado esperado: kernel iniciado con buses, memoria, agentes desacoplados, artefactos, logs y metricas.
+# Resultado esperado: kernel iniciado con proyecto abierto, estados controlados, agentes registrados y catalogo de procesos.
 # Conexion API: no conecta a APIs externas.
 
 from __future__ import annotations
@@ -12,12 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict
 
-from agents.backend_agent import BackendAgent
-from agents.coordinador_agent import CoordinadorAgent
-from agents.database_agent import DatabaseAgent
-from agents.devops_agent import DevOpsAgent
-from agents.frontend_agent import FrontendAgent
-from agents.qa_agent import QAAgent
+from agents.registry import AgentRegistry
 from core.agent_bus import AgentBus, AgentResult
 from core.artifact_engine import ArtifactEngine
 from core.configuration import ConfigurationManager
@@ -25,6 +20,9 @@ from core.event_bus import EventBus
 from core.logging_engine import LoggingEngine
 from core.memory_bus import MemoryBus
 from core.metrics import MetricsEngine
+from core.project_manager import ProjectManager
+from core.state_machine import StateMachine
+from processes.catalog import ProcessCatalog
 
 
 class Kernel:
@@ -33,6 +31,10 @@ class Kernel:
         self.config = ConfigurationManager()
         self.logger = LoggingEngine(self.project_root)
         self.metrics = MetricsEngine()
+        self.state = StateMachine()
+        self.project = ProjectManager(self.project_root)
+        self.agent_registry = AgentRegistry.default()
+        self.process_catalog = ProcessCatalog.default()
         self.events = EventBus()
         self.memory = MemoryBus()
         self.agents = AgentBus()
@@ -40,26 +42,22 @@ class Kernel:
         self.booted = False
 
     def boot(self) -> None:
-        self.project_root.mkdir(parents=True, exist_ok=True)
+        self.state.transition_to("booting")
+        metadata = self.project.open_project()
         self.memory.set("kernel.name", "SkillOAF Studio")
         self.memory.set("kernel.version", "0.2.0")
         self.memory.set("project.root", str(self.project_root))
+        self.memory.set("project.name", metadata.name)
         self.metrics.increment("kernel.boot.count")
         self.register_default_agents()
         self.events.publish("kernel_booted", {"project_root": str(self.project_root)})
         self.logger.info("Kernel iniciado")
+        self.state.transition_to("booted")
+        self.state.transition_to("project_loaded")
         self.booted = True
 
     def register_default_agents(self) -> None:
-        agents = (
-            CoordinadorAgent(),
-            FrontendAgent(),
-            BackendAgent(),
-            DatabaseAgent(),
-            QAAgent(),
-            DevOpsAgent(),
-        )
-        for agent in agents:
+        for agent in self.agent_registry.create_all():
             agent.initialize(self)
             self.agents.register(agent)
             self.metrics.increment("agents.registered")
@@ -73,8 +71,12 @@ class Kernel:
     def status(self) -> Dict[str, Any]:
         return {
             "booted": self.booted,
+            "project": self.project.snapshot(),
             "project_root": str(self.project_root),
+            "state": self.state.snapshot(),
             "config": self.config.all(),
+            "agent_registry": self.agent_registry.snapshot(),
+            "process_catalog": self.process_catalog.snapshot(),
             "agents": self.agents.list_agents(),
             "memory": self.memory.all(),
             "decisions": self.memory.decisions,
