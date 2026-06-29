@@ -1,0 +1,149 @@
+project:
+  name: "CRUD Clientes - Fichero"
+  version: "0.1.0"
+  owner: "Oscar Fontana"
+  objective: "Crear una aplicacion empresarial para administrar clientes como fichas ordenadas alfabeticamente."
+  business_context: "Gestion de clientes con busqueda rapida, alta, modificacion, baja y consulta visual tipo fichero."
+
+platform:
+  frontend_preferred: "Flet"
+  backend_preferred: "FastAPI"
+  database_preferred: "SQLite para prototipo, PostgreSQL para produccion"
+  target_os: "Windows 11 / Linux"
+  deployment: "local primero, preparado para red"
+
+users:
+  roles:
+    - name: "Administrador"
+      permissions:
+        - "crear_cliente"
+        - "editar_cliente"
+        - "eliminar_cliente"
+        - "ver_cliente"
+        - "exportar_clientes"
+    - name: "Operador"
+      permissions:
+        - "ver_cliente"
+        - "crear_cliente"
+        - "editar_cliente"
+
+entities:
+  cliente:
+    description: "Registro maestro de cliente."
+    fields:
+      - name: "id"
+        type: "integer"
+        required: true
+        primary_key: true
+      - name: "apellido"
+        type: "string"
+        required: true
+      - name: "nombre"
+        type: "string"
+        required: true
+      - name: "razon_social"
+        type: "string"
+        required: false
+      - name: "dni_cuit"
+        type: "string"
+        required: false
+        unique: true
+      - name: "telefono"
+        type: "string"
+        required: false
+      - name: "email"
+        type: "string"
+        required: false
+      - name: "direccion"
+        type: "string"
+        required: false
+      - name: "localidad"
+        type: "string"
+        required: false
+      - name: "provincia"
+        type: "string"
+        required: false
+      - name: "estado"
+        type: "enum"
+        values: ["Activo", "Inactivo", "Suspendido"]
+        default: "Activo"
+      - name: "observaciones"
+        type: "text"
+        required: false
+      - name: "fecha_alta"
+        type: "datetime"
+        required: true
+
+frontend:
+  style: "empresarial, claro, moderno, sobrio"
+  main_screen: "Fichero de Clientes"
+  layout:
+    sidebar: true
+    topbar: true
+    searchbar: true
+    alphabet_index: true
+    card_grid: true
+    pagination: true
+  card_grid:
+    columns_desktop: 4
+    visible_rows: 3
+    order_by: "apellido asc, nombre asc"
+    actions: ["Ver", "Editar", "Eliminar"]
+  filters:
+    - "texto libre"
+    - "estado"
+    - "letra inicial"
+  screens:
+    - name: "Listado tipo fichero"
+      purpose: "mostrar fichas de clientes ordenadas alfabeticamente"
+    - name: "Alta cliente"
+      purpose: "crear un nuevo cliente"
+    - name: "Edicion cliente"
+      purpose: "modificar datos"
+    - name: "Detalle cliente"
+      purpose: "ver ficha completa"
+
+backend:
+  api_prefix: "/api/v1"
+  endpoints:
+    - method: "GET"
+      path: "/clientes"
+      purpose: "listar con filtros, busqueda, letra y paginacion"
+    - method: "GET"
+      path: "/clientes/{id}"
+      purpose: "obtener detalle"
+    - method: "POST"
+      path: "/clientes"
+      purpose: "crear"
+    - method: "PUT"
+      path: "/clientes/{id}"
+      purpose: "actualizar"
+    - method: "DELETE"
+      path: "/clientes/{id}"
+      purpose: "baja logica o eliminacion controlada"
+  audit:
+    enabled: true
+    events: ["create", "update", "delete", "login", "export"]
+  security:
+    auth_required: true
+    roles_enabled: true
+    jwt_prepared: true
+
+reports:
+  export:
+    - "Excel"
+    - "CSV"
+    - "PDF futuro"
+
+acceptance_criteria:
+  - "El usuario puede localizar un cliente por apellido en menos de cinco segundos."
+  - "El listado se ordena alfabeticamente."
+  - "Cada ficha muestra datos minimos y estado."
+  - "Las operaciones CRUD quedan auditadas."
+  - "El backend expone endpoints documentados."
+  - "El frontend consume contratos claros del backend."
+
+open_questions:
+  - "Definir si la baja sera logica o fisica."
+  - "Definir si se usara SQLite o PostgreSQL en la primera version."
+  - "Definir si se requiere login desde el inicio."
