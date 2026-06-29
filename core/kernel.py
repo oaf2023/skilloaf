@@ -4,8 +4,8 @@
 # API/Funcion asociada: Kernel.boot / Kernel.register_default_agents / Kernel.status.
 # Descripcion: coordina buses, memoria, agentes, artefactos, configuracion, logs, metricas, proyecto, estados, catalogos y servicios.
 # Uso: kernel = Kernel('.'); kernel.boot(); print(kernel.status())
-# Resultado esperado: kernel iniciado con servicios disponibles en kernel.services.
-# Conexion API: no conecta a APIs externas.
+# Resultado esperado: kernel iniciado con servicios disponibles en kernel.services, incluyendo MCPService.
+# Conexion API: no conecta a APIs externas; MCPService esta preparado como canal de integracion.
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ from processes.catalog import ProcessCatalog
 from services.agent_service import AgentService
 from services.artifact_service import ArtifactService
 from services.knowledge_service import KnowledgeService
+from services.mcp_service import MCPService
 from services.process_service import ProcessService
 from services.project_service import ProjectService
 from services.service_manager import ServiceManager
@@ -55,13 +56,14 @@ class Kernel:
         self.services.register("process", ProcessService(self))
         self.services.register("artifact", ArtifactService(self))
         self.services.register("knowledge", KnowledgeService(self))
+        self.services.register("mcp", MCPService(self))
 
     def boot(self) -> None:
         self.state.transition_to("booting")
         self.services.start_all()
         metadata = self.services.get("project").open()
         self.memory.set("kernel.name", "SkillOAF Studio")
-        self.memory.set("kernel.version", "0.3.0")
+        self.memory.set("kernel.version", "0.4.0")
         self.memory.set("project.root", str(self.project_root))
         self.memory.set("project.name", metadata["name"])
         self.metrics.increment("kernel.boot.count")
