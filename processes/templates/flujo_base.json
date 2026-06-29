@@ -1,0 +1,13 @@
+{
+  "name": "flujo_base",
+  "version": "0.2.0",
+  "description": "Proceso base de SkillOAF Studio para ejecutar agentes principales.",
+  "steps": [
+    {"agent": "coordinador", "action": "run"},
+    {"agent": "frontend", "action": "run"},
+    {"agent": "backend", "action": "run"},
+    {"agent": "database", "action": "run"},
+    {"agent": "qa", "action": "run"},
+    {"agent": "devops", "action": "run"}
+  ]
+}
