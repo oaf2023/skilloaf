@@ -14,7 +14,10 @@ from typing import Any, Dict
 
 from agents.backend_agent import BackendAgent
 from agents.coordinador_agent import CoordinadorAgent
+from agents.database_agent import DatabaseAgent
+from agents.devops_agent import DevOpsAgent
 from agents.frontend_agent import FrontendAgent
+from agents.qa_agent import QAAgent
 from core.agent_bus import AgentBus, AgentResult
 from core.artifact_engine import ArtifactEngine
 from core.event_bus import EventBus
@@ -40,7 +43,15 @@ class Kernel:
         self.booted = True
 
     def register_default_agents(self) -> None:
-        for agent in (CoordinadorAgent(), FrontendAgent(), BackendAgent()):
+        agents = (
+            CoordinadorAgent(),
+            FrontendAgent(),
+            BackendAgent(),
+            DatabaseAgent(),
+            QAAgent(),
+            DevOpsAgent(),
+        )
+        for agent in agents:
             agent.initialize(self)
             self.agents.register(agent)
 
