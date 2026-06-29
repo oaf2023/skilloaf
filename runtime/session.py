@@ -40,7 +40,10 @@ class StudioSession:
         return results
 
     def run_default_workflow(self) -> List[AgentResult]:
-        workflow = Workflow.from_agents("flujo_base", ["coordinador", "frontend", "backend"])
+        workflow = Workflow.from_agents(
+            "flujo_base",
+            ["coordinador", "frontend", "backend", "database", "qa", "devops"],
+        )
         return self.run_workflow(workflow)
 
     def status(self) -> dict:
