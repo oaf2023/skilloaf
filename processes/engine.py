@@ -2,7 +2,7 @@
 # Fecha: 2026-06-29
 # Utilidad: motor de procesos declarativos para SkillOAF Studio.
 # API/Funcion asociada: ProcessEngine.run_dict.
-# Descripcion: parsea, valida, compila y ejecuta procesos usando StudioSession.
+# Descripcion: parsea, valida, compila y ejecuta procesos usando una sesion compatible con StudioSession.
 # Uso: ProcessEngine(session).run_dict({'name':'base','steps':['coordinador','frontend']})
 # Resultado esperado: proceso ejecutado por Runtime y resultados de agentes devueltos.
 # Conexion API: no conecta a APIs externas.
@@ -15,11 +15,10 @@ from core.agent_bus import AgentResult
 from processes.compiler import ProcessCompiler
 from processes.parser import ProcessParser
 from processes.validator import ProcessValidator
-from runtime.session import StudioSession
 
 
 class ProcessEngine:
-    def __init__(self, session: StudioSession) -> None:
+    def __init__(self, session: Any) -> None:
         self.session = session
 
     def run_dict(self, data: Dict[str, Any]) -> List[AgentResult]:
